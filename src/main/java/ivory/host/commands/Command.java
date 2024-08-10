@@ -90,7 +90,6 @@ public class Command extends ListenerAdapter {
                 int port = extractPlayerCount(serverData, "port");
                 int onlinePlayers = extractPlayerCount(serverData, "online");
                 int maxPlayers = extractPlayerCount(serverData, "max");
-                int version = extractPlayerCount(serverData, "version");
 
                 String online = Integer.toString(onlinePlayers);
                 String max = Integer.toString(maxPlayers);
