@@ -23,6 +23,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Command extends ListenerAdapter {
 
@@ -44,20 +45,22 @@ public class Command extends ListenerAdapter {
             boolean isEnabled = this.guildSettingsManager.isMCCommandEnabled(event.getGuild().getId());
             boolean isBedrockEnabled = this.guildSettingsManager.isBedrockMcEnabled(event.getGuild().getId());
 
-            String option1;
-            String option2;
-            String firstInput;
-            String secondInput;
-            String finalOutput;
-            String serverData;
-            int onlinePlayers;
-            int maxPlayers;
-            String online;
-            String max;
 
             if (isEnabled) {
                 String guildId = event.getGuild().getId();
                 JsonObject settings = this.guildSettingsManager.loadGuildSettings(guildId);
+
+                String option1;
+                String option2;
+                String firstInput;
+                String secondInput;
+                String finalOutput;
+                String serverData;
+                int onlinePlayers;
+                int maxPlayers;
+                String online;
+                String max;
+
                 if (!isBedrockEnabled) {
                     if (settings.has("option1") && settings.has("option2")) {
                         option1 = settings.get("option1").getAsString();
@@ -140,6 +143,31 @@ public class Command extends ListenerAdapter {
 
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
+
+
+        OptionMapping enable_disable;
+        Boolean true_false;
+        enable_disable = event.getOption("enable");
+        assert enable_disable != null;
+        true_false = enable_disable.getAsBoolean();
+
+        String option1;
+        String option2;
+
+        OptionMapping messageOption = event.getOption("ip");
+        OptionMapping messageOption1 = event.getOption("port");
+
+        assert messageOption != null;
+        option1 = messageOption.getAsString();
+        assert messageOption1 != null;
+        option2 = messageOption1.getAsString();
+
+        String serverip = messageOption.getAsString();
+        String serverport = messageOption1.getAsString();
+
+
+        String guildId = Objects.requireNonNull(event.getGuild()).getId();
+
         String command = event.getName();
         switch (command) {
             case "about" ->
@@ -147,12 +175,6 @@ public class Command extends ListenerAdapter {
                             .setEphemeral(true)
                             .queue();
             case "mcstatus" -> {
-                OptionMapping messageOption = event.getOption("ip");
-                OptionMapping messageOption1 = event.getOption("port");
-
-                assert messageOption != null;
-                String serverip = messageOption.getAsString();
-                String serverport = (messageOption1 != null) ? messageOption1.getAsString() : "";
 
                 String firstInput = serverip.trim();
                 String secondInput = serverport.trim();
@@ -190,12 +212,7 @@ public class Command extends ListenerAdapter {
                 }
             }
             case "mcstatusbedrock" -> {
-                OptionMapping messageOption = event.getOption("ip");
-                OptionMapping messageOption1 = event.getOption("port");
 
-                assert messageOption != null;
-                String serverip = messageOption.getAsString();
-                String serverport = (messageOption1 != null) ? messageOption1.getAsString() : "";
 
                 String firstInput = serverip.trim();
                 String secondInput = serverport.trim();
@@ -238,15 +255,6 @@ public class Command extends ListenerAdapter {
                     return;
                 }
 
-                OptionMapping messageOption = event.getOption("ip");
-                OptionMapping messageOption1 = event.getOption("port");
-
-                assert messageOption != null;
-
-                String option1 = messageOption.getAsString();
-                String option2 = messageOption1.getAsString();
-                String guildId = event.getGuild().getId();
-
                 JsonObject settings = this.guildSettingsManager.loadGuildSettings(guildId);
                 settings.addProperty("option1", option1);
                 settings.addProperty("option2", option2);
@@ -261,9 +269,7 @@ public class Command extends ListenerAdapter {
                     return;
                 }
 
-                OptionMapping messageOption = event.getOption("enable");
-                Boolean option1 = messageOption.getAsBoolean();
-                boolean enableMCCommand = Boolean.parseBoolean(String.valueOf(option1));
+                boolean enableMCCommand = Boolean.parseBoolean(String.valueOf(true_false));
 
                 this.guildSettingsManager.setMCCommandEnabled(event.getGuild().getId(), enableMCCommand);
                 event.reply("Done").setEphemeral(true).queue();
@@ -276,9 +282,7 @@ public class Command extends ListenerAdapter {
                     return;
                 }
 
-                OptionMapping messageOption = event.getOption("enable");
-                Boolean option1 = messageOption.getAsBoolean();
-                boolean enableBedrockMC = Boolean.parseBoolean(String.valueOf(option1));
+                boolean enableBedrockMC = Boolean.parseBoolean(String.valueOf(true_false));
 
                 this.guildSettingsManager.setBedrockMcEnabled(event.getGuild().getId(), enableBedrockMC);
                 event.reply("Done").setEphemeral(true).queue();
