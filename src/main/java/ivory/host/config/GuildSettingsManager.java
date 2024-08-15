@@ -7,24 +7,30 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public class GuildSettingsManager {
 
     private final File file;
+    private static final Logger LOGGER = Logger.getLogger(GuildSettingsManager.class.getName());
 
     public GuildSettingsManager() {
         this.file = new File("serversettings.json");
         if (!file.exists()) {
             try {
-                file.createNewFile();
+                if (file.createNewFile()) {
+                    System.out.println("File created: " + file.getName());
+                } else {
+                    System.out.println("File already exists.");
+                }
                 FileWriter writer = new FileWriter(file);
                 writer.write("{ \"guilds\": {} }"); // Initialize the file with an empty JSON structure
                 writer.flush();
                 writer.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                LOGGER.log(Level.SEVERE, "An error occurred while creating the file.", e);
             }
         }
     }
@@ -41,7 +47,7 @@ public class GuildSettingsManager {
             }
             return guilds.getAsJsonObject(guildId);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "An error occurred while creating the file.", e);
             return new JsonObject();
         }
     }
@@ -57,7 +63,7 @@ public class GuildSettingsManager {
                 writer.flush();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "An error occurred while creating the file.", e);
         }
     }
 
