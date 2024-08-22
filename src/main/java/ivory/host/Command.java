@@ -31,54 +31,53 @@ public class Command extends ListenerAdapter {
 
     public Command(GuildSettingsManager guildSettingsManager) {
         this.guildSettingsManager = guildSettingsManager;
-    }
-    public void onMessageReceived(MessageReceivedEvent event) {
-
-        if (event.getAuthor().isBot()) {
-            return;
         }
+        public void onMessageReceived(MessageReceivedEvent event) {
 
-        String[] args = event.getMessage().getContentRaw().split("\\s+");
+            if (event.getAuthor().isBot()) {
+                return;
+            }
 
-        if (args[0].equalsIgnoreCase("mc")) {
+            String[] args = event.getMessage().getContentRaw().split("\\s+");
 
-            boolean isEnabled = this.guildSettingsManager.isMCCommandEnabled(event.getGuild().getId());
-            boolean isBedrockEnabled = this.guildSettingsManager.isBedrockMcEnabled(event.getGuild().getId());
-
-
-            if (isEnabled) {
+            if (args[0].equalsIgnoreCase("mc")) {
                 String guildId = event.getGuild().getId();
-                JsonObject settings = this.guildSettingsManager.loadGuildSettings(guildId);
 
-                String option1;
-                String option2;
-                String firstInput;
-                String secondInput;
-                String finalOutput;
-                String serverData;
-                int onlinePlayers;
-                int maxPlayers;
-                String online;
-                String max;
 
-                if (!isBedrockEnabled) {
-                    if (settings.has("option1") && settings.has("option2")) {
-                        option1 = settings.get("option1").getAsString();
-                        option2 = settings.get("option2").getAsString();
+                boolean isEnabled = this.guildSettingsManager.isMCCommandEnabled(guildId);
+                boolean isBedrockEnabled = this.guildSettingsManager.isBedrockMcEnabled(guildId);
 
-                        firstInput = option1.trim();
-                        secondInput = option2.trim();
-                        finalOutput = secondInput.isEmpty() ? firstInput : firstInput + ":" + secondInput;
-                        serverData = getServerStatus(finalOutput);
 
-                        if (serverData != null) {
+                if (isEnabled) {
+                    JsonObject settings = this.guildSettingsManager.loadGuildSettings(guildId);
 
-                            onlinePlayers = extractPlayerCount(serverData, "online");
+                    String option1;
+                    String option2;
+                    String firstInput;
+                    String secondInput;
+                    String finalOutput;
+                    String serverData;
+                    int onlinePlayers;
+                    int maxPlayers;
+                    String online;
+                    String max;
+
+                    option1 = settings.get("option1").getAsString();
+                    option2 = settings.get("option2").getAsString();
+
+                    firstInput = option1.trim();
+                    secondInput = option2.trim();
+                    finalOutput = secondInput.isEmpty() ? firstInput : firstInput + ":" + secondInput;
+
+
+
+                    if (!isBedrockEnabled) {
+                        if (settings.has("option1") && settings.has("option2")) {
+                            serverData = getServerStatus(finalOutput);
+                            onlinePlayers = extractPlayerCount(Objects.requireNonNull(serverData), "online");
                             maxPlayers = extractPlayerCount(serverData, "max");
-
                             online = Integer.toString(onlinePlayers);
                             max = Integer.toString(maxPlayers);
-
                             EmbedBuilder embedBuilder = new EmbedBuilder();
 
                             embedBuilder.setTitle(option1);
@@ -97,59 +96,49 @@ public class Command extends ListenerAdapter {
                                 event.getChannel().sendMessage("The server is currently offline or the address provided is invalid.").queue();
                             }
                         } else {
+                            event.getChannel().sendMessage("No settings found for this server.").queue();
+                        }
+                    } else if (settings.has("option1") && settings.has("option2")) {
+                        option1 = settings.get("option1").getAsString();
+                        option2 = settings.get("option2").getAsString();
+                        firstInput = option1.trim();
+                        secondInput = option2.trim();
+                        finalOutput = secondInput.isEmpty() ? firstInput : firstInput + ":" + secondInput;
+                        serverData = getServerStatusBedrock(finalOutput);
+                        if (serverData != null) {
+
+                            onlinePlayers = extractPlayerCount(serverData, "online");
+                            maxPlayers = extractPlayerCount(serverData, "max");
+                            online = Integer.toString(onlinePlayers);
+                            max = Integer.toString(maxPlayers);
+
+                            EmbedBuilder embedBuilder = new EmbedBuilder();
+                            embedBuilder.setTitle(option1);
+                            embedBuilder.addField("Server IP", "`" + option1 + ":" + option2 + "`", true);
+                            embedBuilder.addField("Online Players", "`" + online + "`" + "/" + "`" + max + "`:video_game:", true);
+                            embedBuilder.setFooter("Ivory Host", "https://cdn.discordapp.com/avatars/1250796754983452792/17240db181de64e1b6fbf13e27b89d98.webp?size=160");
+                            embedBuilder.setColor(0x8F00FF);
+
+                            // Build the embed object
+                            MessageEmbed embed = embedBuilder.build();
+
+                            if (!(onlinePlayers == -1)) {
+                                event.getChannel().sendMessage("").setEmbeds(embed).queue();
+                            } else {
+                                event.getChannel().sendMessage("The server is currently offline or the address provided is invalid.").queue();
+                            }
+                        } else {
                             event.getChannel().sendMessage("The server is currently offline or the address provided is invalid.").queue();
                         }
                     } else {
                         event.getChannel().sendMessage("No settings found for this server.").queue();
                     }
-                } else if (settings.has("option1") && settings.has("option2")) {
-                    option1 = settings.get("option1").getAsString();
-                    option2 = settings.get("option2").getAsString();
-                    firstInput = option1.trim();
-                    secondInput = option2.trim();
-                    finalOutput = secondInput.isEmpty() ? firstInput : firstInput + ":" + secondInput;
-                    serverData = getServerStatusBedrock(finalOutput);
-                    if (serverData != null) {
-
-                        onlinePlayers = extractPlayerCount(serverData, "online");
-                        maxPlayers = extractPlayerCount(serverData, "max");
-                        online = Integer.toString(onlinePlayers);
-                        max = Integer.toString(maxPlayers);
-
-                        EmbedBuilder embedBuilder = new EmbedBuilder();
-                        embedBuilder.setTitle(option1);
-                        embedBuilder.addField("Server IP", "`" + option1 + ":" + option2 + "`", true);
-                        embedBuilder.addField("Online Players", "`" + online + "`" + "/" + "`" + max + "`:video_game:", true);
-                        embedBuilder.setFooter("Ivory Host", "https://cdn.discordapp.com/avatars/1250796754983452792/17240db181de64e1b6fbf13e27b89d98.webp?size=160");
-                        embedBuilder.setColor(0x8F00FF);
-
-                        // Build the embed object
-                        MessageEmbed embed = embedBuilder.build();
-
-                        if (!(onlinePlayers == -1)) {
-                            event.getChannel().sendMessage("").setEmbeds(embed).queue();
-                        } else {
-                            event.getChannel().sendMessage("The server is currently offline or the address provided is invalid.").queue();
-                        }
-                    } else {
-                        event.getChannel().sendMessage("The server is currently offline or the address provided is invalid.").queue();
-                    }
-                } else {
-                    event.getChannel().sendMessage("No settings found for this server.").queue();
                 }
             }
         }
-    }
 
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
-
-
-        OptionMapping enable_disable;
-        Boolean true_false;
-        enable_disable = event.getOption("enable");
-        assert enable_disable != null;
-        true_false = enable_disable.getAsBoolean();
 
         String option1;
         String option2;
@@ -157,24 +146,25 @@ public class Command extends ListenerAdapter {
         OptionMapping messageOption = event.getOption("ip");
         OptionMapping messageOption1 = event.getOption("port");
 
-        assert messageOption != null;
-        option1 = messageOption.getAsString();
-        assert messageOption1 != null;
-        option2 = messageOption1.getAsString();
-
-        String serverip = messageOption.getAsString();
-        String serverport = messageOption1.getAsString();
-
+        OptionMapping enable_disable;
+        Boolean true_false;
+        enable_disable = event.getOption("enable");
+        assert enable_disable != null;
 
         String guildId = Objects.requireNonNull(event.getGuild()).getId();
-
         String command = event.getName();
+
         switch (command) {
             case "about" ->
                     event.reply("This bot was created by 5MS_.\nFor support, join our Discord server: https://discord.gg/nr4JYefgP3")
                             .setEphemeral(true)
                             .queue();
             case "mcstatus" -> {
+
+                assert messageOption != null;
+                String serverip = messageOption.getAsString();
+                assert messageOption1 != null;
+                String serverport = messageOption1.getAsString();
 
                 String firstInput = serverip.trim();
                 String secondInput = serverport.trim();
@@ -213,6 +203,10 @@ public class Command extends ListenerAdapter {
             }
             case "mcstatusbedrock" -> {
 
+                assert messageOption != null;
+                String serverip = messageOption.getAsString();
+                assert messageOption1 != null;
+                String serverport = messageOption1.getAsString();
 
                 String firstInput = serverip.trim();
                 String secondInput = serverport.trim();
@@ -249,11 +243,18 @@ public class Command extends ListenerAdapter {
 
             }
             case "setup" -> {
-
                 if (event.getMember() != null &&  !event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
                     event.getChannel().sendMessage("You don't have permission to use this command.").queue();
                     return;
                 }
+
+                messageOption = event.getOption("ip");
+                messageOption1 = event.getOption("port");
+
+                assert messageOption != null;
+                option1 = messageOption.getAsString();
+                assert messageOption1 != null;
+                option2 = messageOption1.getAsString();
 
                 JsonObject settings = this.guildSettingsManager.loadGuildSettings(guildId);
                 settings.addProperty("option1", option1);
@@ -263,28 +264,40 @@ public class Command extends ListenerAdapter {
                 event.reply("Done").setEphemeral(true).queue();
             }
             case "setupmc" -> {
-
                 if (event.getMember() != null && !event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
                     event.getChannel().sendMessage("You don't have permission to use this command.").queue();
                     return;
                 }
+                true_false = enable_disable.getAsBoolean();
 
                 boolean enableMCCommand = Boolean.parseBoolean(String.valueOf(true_false));
 
-                this.guildSettingsManager.setMCCommandEnabled(event.getGuild().getId(), enableMCCommand);
+                this.guildSettingsManager.setMCCommandEnabled(guildId, enableMCCommand);
                 event.reply("Done").setEphemeral(true).queue();
 
             }
             case "setupbedrockmc" -> {
-
                 if (event.getMember() != null && !event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
                     event.getChannel().sendMessage("You don't have permission to use this command.").queue();
                     return;
                 }
+                true_false = enable_disable.getAsBoolean();
 
                 boolean enableBedrockMC = Boolean.parseBoolean(String.valueOf(true_false));
 
-                this.guildSettingsManager.setBedrockMcEnabled(event.getGuild().getId(), enableBedrockMC);
+                this.guildSettingsManager.setBedrockMcEnabled(guildId, enableBedrockMC);
+                event.reply("Done").setEphemeral(true).queue();
+            }
+            case "setupfakeport" -> {
+                if (event.getMember() != null && !event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
+                    event.getChannel().sendMessage("You don't have permission to use this command.").queue();
+                    return;
+                }
+                true_false = enable_disable.getAsBoolean();
+
+                boolean enableFakePort = Boolean.parseBoolean(String.valueOf(true_false));
+
+                this.guildSettingsManager.setFakePortEnabled(guildId, enableFakePort);
                 event.reply("Done").setEphemeral(true).queue();
             }
         }
@@ -383,8 +396,8 @@ public class Command extends ListenerAdapter {
         OptionData option8 = new OptionData(OptionType.BOOLEAN, "enable", "Enable/Disable.", true);
         commandData.add(Commands.slash("setupbedrockmc", "Enabling/Disabling the bedrock mc command.").addOptions(option8));
 
-
-
+        OptionData option9 = new OptionData(OptionType.BOOLEAN, "enable", "Enable/Disable.", true);
+        commandData.add(Commands.slash("setupfakeport", "The port would show as 19132.").addOptions(option9));
 
         event.getJDA().updateCommands().addCommands(commandData).queue();
     }
