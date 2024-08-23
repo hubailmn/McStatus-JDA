@@ -93,7 +93,17 @@ public class Command extends ListenerAdapter {
                             if (!(onlinePlayers == -1)) {
                                 event.getChannel().sendMessage("").setEmbeds(embed).queue();
                             } else {
-                                event.getChannel().sendMessage("The server is currently offline or the address provided is invalid.").queue();
+                                EmbedBuilder embedBuilder1 = new EmbedBuilder();
+                                embedBuilder1.setTitle(option1);
+                                embedBuilder1.addField("Server IP", "`" + option1 + ":" + option2 + "`", true);
+                                embedBuilder1.addField("Server Status", "`Offline`", true);
+                                embedBuilder1.setImage("https://api.loohpjames.com/serverbanner.png?ip=" + option1 + "&port=" + option2 + "&name=" + option1);
+                                embedBuilder1.setFooter("Ivory Host", "https://cdn.discordapp.com/avatars/1250796754983452792/17240db181de64e1b6fbf13e27b89d98.webp?size=160");
+                                embedBuilder1.setColor(0x8F00FF);
+
+                                // Build the embed object
+                                MessageEmbed embed1 = embedBuilder1.build();
+                                event.getChannel().sendMessage("").setEmbeds(embed1).queue();
                             }
                         } else {
                             event.getChannel().sendMessage("No settings found for this server.").queue();
@@ -125,11 +135,27 @@ public class Command extends ListenerAdapter {
                             if (!(onlinePlayers == -1)) {
                                 event.getChannel().sendMessage("").setEmbeds(embed).queue();
                             } else {
-                                event.getChannel().sendMessage("The server is currently offline or the address provided is invalid.").queue();
-                            }
+                                EmbedBuilder embedBuilder1 = new EmbedBuilder();
+                                embedBuilder1.setTitle(option1);
+                                embedBuilder1.addField("Server IP", "`" + option1 + ":" + option2 + "`", true);
+                                embedBuilder1.addField("Server Status", "`Offline`", true);
+                                embedBuilder1.setFooter("Ivory Host", "https://cdn.discordapp.com/avatars/1250796754983452792/17240db181de64e1b6fbf13e27b89d98.webp?size=160");
+                                embedBuilder1.setColor(0x8F00FF);
+
+                                // Build the embed object
+                                MessageEmbed embed1 = embedBuilder.build();
+                                event.getChannel().sendMessage("").setEmbeds(embed1).queue();                            }
                         } else {
-                            event.getChannel().sendMessage("The server is currently offline or the address provided is invalid.").queue();
-                        }
+                            EmbedBuilder embedBuilder1 = new EmbedBuilder();
+                            embedBuilder1.setTitle(option1);
+                            embedBuilder1.addField("Server IP", "`" + option1 + ":" + option2 + "`", true);
+                            embedBuilder1.addField("Server Status", "`Offline`", true);
+                            embedBuilder1.setFooter("Ivory Host", "https://cdn.discordapp.com/avatars/1250796754983452792/17240db181de64e1b6fbf13e27b89d98.webp?size=160");
+                            embedBuilder1.setColor(0x8F00FF);
+
+                            // Build the embed object
+                            MessageEmbed embed1 = embedBuilder.build();
+                            event.getChannel().sendMessage("").setEmbeds(embed1).queue();                        }
                     } else {
                         event.getChannel().sendMessage("No settings found for this server.").queue();
                     }
