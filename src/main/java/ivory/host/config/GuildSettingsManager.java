@@ -100,4 +100,15 @@ public class GuildSettingsManager {
         JsonObject settings = loadGuildSettings(guildId);
         return settings.has("fakePortEnabled") && settings.get("fakePortEnabled").getAsBoolean();
     }
+
+    public void setRemovePort(String guildId, boolean enabled) {
+        JsonObject settings = loadGuildSettings(guildId);
+        settings.addProperty("removePortEnabled", enabled);
+        saveGuildSettings(guildId, settings);
+    }
+
+    public boolean isRemovePort(String guildId) {
+        JsonObject settings = loadGuildSettings(guildId);
+        return settings.has("removePortEnabled") && settings.get("removePortEnabled").getAsBoolean();
+    }
 }

@@ -154,8 +154,9 @@ public class Command extends ListenerAdapter {
                             embedBuilder1.setColor(0x8F00FF);
 
                             // Build the embed object
-                            MessageEmbed embed1 = embedBuilder.build();
-                            event.getChannel().sendMessage("").setEmbeds(embed1).queue();                        }
+                            MessageEmbed embed1 = embedBuilder1.build();
+                            event.getChannel().sendMessage("").setEmbeds(embed1).queue();
+                        }
                     } else {
                         event.getChannel().sendMessage("No settings found for this server.").queue();
                     }
