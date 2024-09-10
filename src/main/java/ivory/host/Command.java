@@ -327,6 +327,18 @@ public class Command extends ListenerAdapter {
                 this.guildSettingsManager.setFakePortEnabled(guildId, enableFakePort);
                 event.reply("Done").setEphemeral(true).queue();
             }
+            case "setupremoveport" -> {
+                if (event.getMember() != null && !event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
+                    event.getChannel().sendMessage("You don't have permission to use this command.").queue();
+                    return;
+                }
+                true_false = enable_disable.getAsBoolean();
+
+                boolean removePortEnabled = Boolean.parseBoolean(String.valueOf(true_false));
+
+                this.guildSettingsManager.setRemovePort(guildId, removePortEnabled);
+                event.reply("Done").setEphemeral(true).queue();
+            }
         }
     }
 
@@ -425,6 +437,9 @@ public class Command extends ListenerAdapter {
 
         OptionData option9 = new OptionData(OptionType.BOOLEAN, "enable", "Enable/Disable.", true);
         commandData.add(Commands.slash("setupfakeport", "The port would show as 19132.").addOptions(option9));
+
+        OptionData option10 = new OptionData(OptionType.BOOLEAN, "enable", "Enable/Disable.", true);
+        commandData.add(Commands.slash("setupremoveport", "It won't show port in mc command.").addOptions(option10));
 
         event.getJDA().updateCommands().addCommands(commandData).queue();
     }
