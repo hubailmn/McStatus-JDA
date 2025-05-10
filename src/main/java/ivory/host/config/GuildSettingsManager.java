@@ -67,7 +67,6 @@ public class GuildSettingsManager {
         }
     }
 
-    // New Methods for handling mcCommandEnabled
     public void setMCCommandEnabled(String guildId, boolean enabled) {
         JsonObject settings = loadGuildSettings(guildId);
         settings.addProperty("mcCommandEnabled", enabled);
@@ -90,16 +89,6 @@ public class GuildSettingsManager {
         return settings.has("bedrockMcEnabled") && settings.get("bedrockMcEnabled").getAsBoolean();
     }
 
-    public void setFakePortEnabled(String guildId, boolean enabled) {
-        JsonObject settings = loadGuildSettings(guildId);
-        settings.addProperty("fakePortEnabled", enabled);
-        saveGuildSettings(guildId, settings);
-    }
-
-    public boolean isFakePortEnabled(String guildId) {
-        JsonObject settings = loadGuildSettings(guildId);
-        return settings.has("fakePortEnabled") && settings.get("fakePortEnabled").getAsBoolean();
-    }
 
     public void setRemovePort(String guildId, boolean enabled) {
         JsonObject settings = loadGuildSettings(guildId);
