@@ -2,24 +2,18 @@ package ivory.host.util.classes;
 
 import ivory.host.Database.DataBaseConnection;
 import ivory.host.util.CSend;
-import lombok.Getter;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-@Getter
 public abstract class TableBuilder {
 
-    private final Connection connection;
-
-    public TableBuilder() {
-        this(DataBaseConnection.getConnection());
+    protected Connection getConnection() {
+        return DataBaseConnection.getConnection();
     }
 
-    public TableBuilder(Connection connection) {
-        this.connection = connection;
-
+    public TableBuilder() {
         try {
             createTable();
             init();
@@ -35,9 +29,9 @@ public abstract class TableBuilder {
     }
 
     protected void executeUpdate(String sql) throws SQLException {
-        try (Statement stmt = connection.createStatement()) {
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(sql);
         }
     }
-
 }

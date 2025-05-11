@@ -30,10 +30,9 @@ public class McStatusBot {
 
     public static void main(String[] args) {
 
-        DataBaseConnection.initialize();
         registerDatabaseTables();
 
-        shardManager = DefaultShardManagerBuilder.createDefault("<TOKEN HERE>")
+        shardManager = DefaultShardManagerBuilder.createDefault("")
                 .setStatus(OnlineStatus.ONLINE)
                 .setActivity(Activity.watching("Minecraft Server Status"))
                 .enableIntents(GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_PRESENCES)
@@ -62,7 +61,7 @@ public class McStatusBot {
     }
 
     public static void registerEvents() {
-        System.out.println("\t- Registering Listeners");
+        System.out.println("\n\t- Registering Listeners");
 
         Reflections reflections = new Reflections("ivory.host.listener");
         Set<Class<? extends DEvent>> subCommandClasses = reflections.getSubTypesOf(DEvent.class);

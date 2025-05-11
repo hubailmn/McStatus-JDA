@@ -40,7 +40,7 @@ public class Registers extends ListenerAdapter {
 
         List<CommandData> commandList = new ArrayList<>();
 
-        System.out.println("\t- Registering Commands");
+        System.out.println("\n\t- Registering Commands for guild \"" + guild.getName() + "\" (" + guild.getId() + ")");
         Reflections reflections = new Reflections("ivory.host.command");
         Set<Class<? extends DCommand>> commandClasses = reflections.getSubTypesOf(DCommand.class);
         for (Class<? extends DCommand> clazz : commandClasses) {
