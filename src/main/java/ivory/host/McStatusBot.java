@@ -52,7 +52,7 @@ public class McStatusBot {
         for (Class<? extends TableBuilder> clazz : databaseTable) {
             try {
                 clazz.getDeclaredConstructor().newInstance();
-                System.out.printf("\t\t- Registered database table: %s%n", clazz.getSimpleName());
+                System.out.printf("\n\t- Registered database table: %s%n", clazz.getSimpleName());
             } catch (Exception e) {
                 System.err.printf("\t\t- Failed to register database table: %s - %s%n", clazz.getSimpleName(), e.getMessage());
                 e.printStackTrace();
