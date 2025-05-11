@@ -62,6 +62,9 @@ public class SetUpCommand extends DCommand {
         int port = Integer.parseInt(Objects.requireNonNull(e.getValue("option2")).getAsString());
 
         GuildManager guildManager = CacheManager.getGuildManager(e.getGuild().getIdLong());
+        guildManager.setName(name);
+        guildManager.setIp(ip);
+        guildManager.setPort(port);
         guildManager.setMcCommandEnabled(true);
 
         e.reply("✅ Server setup complete!\n" +
