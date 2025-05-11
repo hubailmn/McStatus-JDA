@@ -2,6 +2,7 @@ package ivory.host.Database.table;
 
 import ivory.host.Database.DataBaseConnection;
 import ivory.host.data.GuildManager;
+import ivory.host.data.cache.GuildCache;
 import ivory.host.util.classes.TableBuilder;
 import lombok.Getter;
 import lombok.SneakyThrows;
@@ -61,6 +62,8 @@ public class GuildTable extends TableBuilder {
             ps.setString(8, guildManager.getGuildID().toString());
             ps.executeUpdate();
         }
+
+        GuildCache.addGuild(guildManager.getGuildID(), guildManager);
     }
 
     @SneakyThrows
