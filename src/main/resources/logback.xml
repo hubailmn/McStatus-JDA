@@ -1,0 +1,18 @@
+<configuration>
+    <!--    Disable DEBUG logging for specific packages-->
+    <logger name="net.dv8tion.jda" level="INFO"/>
+    <logger name="net.dv8tion.jda" level="WARN"/>
+    <logger name="org.reflections" level="WARN"/>
+
+    <!-- Set root logger level -->
+    <root level="WARN">
+        <appender-ref ref="STDOUT"/>
+    </root>
+
+    <!-- Console Appender -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+</configuration>

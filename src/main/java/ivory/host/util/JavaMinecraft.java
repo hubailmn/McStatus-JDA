@@ -1,25 +1,58 @@
-package ivory.host;
+package ivory.host.util;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import ivory.host.util.server.TextFormat;
+import ivory.host.util.server.TextSegment;
+
+import javax.imageio.ImageIO;
+import javax.naming.directory.Attribute;
+import javax.naming.directory.Attributes;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.InitialDirContext;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.*;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import javax.imageio.ImageIO;
-import javax.naming.directory.*;
-import com.google.gson.*;
-import java.util.Base64;
 
 public class JavaMinecraft {
 
-    // Host and port info.
-    private String host;
-    private int port;
+    static Map<String, Color> mcColorMap = new HashMap<>();
 
+    static {
+        mcColorMap.put("black", Color.decode("#000000"));
+        mcColorMap.put("dark_blue", Color.decode("#0000AA"));
+        mcColorMap.put("dark_green", Color.decode("#00AA00"));
+        mcColorMap.put("dark_aqua", Color.decode("#00AAAA"));
+        mcColorMap.put("dark_red", Color.decode("#AA0000"));
+        mcColorMap.put("dark_purple", Color.decode("#AA00AA"));
+        mcColorMap.put("gold", Color.decode("#FFAA00"));
+        mcColorMap.put("gray", Color.decode("#AAAAAA"));
+        mcColorMap.put("dark_gray", Color.decode("#555555"));
+        mcColorMap.put("blue", Color.decode("#5555FF"));
+        mcColorMap.put("green", Color.decode("#55FF55"));
+        mcColorMap.put("aqua", Color.decode("#55FFFF"));
+        mcColorMap.put("red", Color.decode("#FF5555"));
+        mcColorMap.put("light_purple", Color.decode("#FF55FF"));
+        mcColorMap.put("yellow", Color.decode("#FFFF55"));
+        mcColorMap.put("white", Color.decode("#FFFFFF"));
+    }
+
+    // Set some default dimensions. You can adjust these as needed.
+    private final int imageWidth = 766;
+    private final int imageHeight = 110;
+    // Host and port info.
+    private final String host;
+    private int port;
     // Retrieved data fields.
     private boolean retrieved = false;
     private BufferedImage motdImage;
@@ -27,123 +60,11 @@ public class JavaMinecraft {
     private String maxPlayer;
     private BufferedImage serverIcon;
 
-    // Set some default dimensions. You can adjust these as needed.
-    private final int imageWidth = 766;
-    private final int imageHeight = 110;
-
     // Private constructor.
-    private JavaMinecraft(String host, int port) {
+    public JavaMinecraft(String host, int port) {
         this.host = host;
         this.port = port;
     }
-
-    // --- Static builder methods ---
-    public static JavaMinecraft generate(String host) {
-        return new JavaMinecraft(host, 25565);
-    }
-
-    public static JavaMinecraft onlineplayer(String host) {
-        return new JavaMinecraft(host, 25565);
-    }
-
-    public static JavaMinecraft maxplayer(String host) {
-        return new JavaMinecraft(host, 25565);
-    }
-
-    public static JavaMinecraft icon(String host) {
-        return new JavaMinecraft(host, 25565);
-    }
-
-    // Set the port.
-    public JavaMinecraft port(int port) {
-        this.port = port;
-        return this;
-    }
-
-    // Get the generated MOTD image.
-    public BufferedImage motd() throws IOException {
-        if (!retrieved) {
-            retrieveData();
-        }
-        return motdImage;
-    }
-
-    // Get online players as a string.
-    public String getOnlinePlayer() throws IOException {
-        if (!retrieved) {
-            retrieveData();
-        }
-        return onlinePlayer;
-    }
-
-    // Get max players as a string.
-    public String getMaxPlayer() throws IOException {
-        if (!retrieved) {
-            retrieveData();
-        }
-        return maxPlayer;
-    }
-
-    // Get the server icon image.
-    public BufferedImage getIcon() throws IOException {
-        if (!retrieved) {
-            retrieveData();
-        }
-        return serverIcon;
-    }
-
-    // --- Internal data retrieval method ---
-    private void retrieveData() throws IOException {
-        // Try a list of protocol versions.
-        int timeout = 5000;
-        int[] protocolVersions = {769, 755, 754, 751, 736, 735, 573, 498, 477, 401, 393, 340, 338, 315, 210, 110, 47};
-        String motdJson = null;
-        int usedVersion = -1;
-        for (int version : protocolVersions) {
-            try {
-                motdJson = ping(host, port, version, timeout);
-                if (motdJson != null && !motdJson.isEmpty()) {
-                    usedVersion = version;
-                    break;
-                }
-            } catch (IOException e) {
-                // Try next version.
-            }
-        }
-        if (motdJson == null || motdJson.isEmpty()) {
-            throw new IOException("Failed to retrieve MOTD from server");
-        }
-
-        // Parse JSON using Gson.
-        Gson gson = new Gson();
-        JsonObject jsonObj = gson.fromJson(motdJson, JsonObject.class);
-
-        // Extract online and max players.
-        if (jsonObj.has("players")) {
-            JsonObject playersObj = jsonObj.getAsJsonObject("players");
-            int online = playersObj.get("online").getAsInt();
-            int max = playersObj.get("max").getAsInt();
-            onlinePlayer = String.valueOf(online);
-            maxPlayer = String.valueOf(max);
-        }
-
-        // Extract server icon.
-        serverIcon = getServerIconFromJson(jsonObj);
-
-        // Parse MOTD description.
-        JsonElement description = jsonObj.get("description");
-        List<TextSegment> segments = parseTextSegments(description, new TextFormat());
-
-        // Use the online player count as text for the top-right (online/max)
-        String playerCountText = (onlinePlayer != null && maxPlayer != null) ? (onlinePlayer + "/" + maxPlayer) : "";
-
-        // Generate the MOTD image.
-        motdImage = renderMotd(segments, serverIcon, imageWidth, imageHeight, playerCountText);
-
-        retrieved = true;
-    }
-
-    // --- Methods from previous implementation ---
 
     private static TexturePaint getDirtTexturePaint(int width, int height) {
         BufferedImage dirtImage = null;
@@ -245,6 +166,8 @@ public class JavaMinecraft {
         }
     }
 
+    // --- Methods from previous implementation ---
+
     private static String ping(String host, int port, int protocolVersion, int timeout) throws IOException {
         Socket socket = new Socket();
         socket.connect(new InetSocketAddress(host, port), timeout);
@@ -311,7 +234,7 @@ public class JavaMinecraft {
                 String target = parts[3];
                 if (target.endsWith("."))
                     target = target.substring(0, target.length() - 1);
-                return new String[]{ target, port };
+                return new String[]{target, port};
             }
         } catch (Exception e) {
             System.out.println("Error resolving SRV: " + e.getMessage());
@@ -347,56 +270,6 @@ public class JavaMinecraft {
         out.write(data);
     }
 
-    // --- Text Segment and Parsing Methods ---
-    static class TextSegment {
-        String text;
-        Color color;
-        boolean bold;
-        boolean italic;
-        public TextSegment(String text, Color color, boolean bold, boolean italic) {
-            this.text = text;
-            this.color = color;
-            this.bold = bold;
-            this.italic = italic;
-        }
-    }
-
-    static class TextFormat {
-        Color color;
-        boolean bold;
-        boolean italic;
-        public TextFormat() {
-            color = Color.WHITE;
-            bold = false;
-            italic = false;
-        }
-        public TextFormat(TextFormat other) {
-            this.color = other.color;
-            this.bold = other.bold;
-            this.italic = other.italic;
-        }
-    }
-
-    static Map<String, Color> mcColorMap = new HashMap<>();
-    static {
-        mcColorMap.put("black", Color.decode("#000000"));
-        mcColorMap.put("dark_blue", Color.decode("#0000AA"));
-        mcColorMap.put("dark_green", Color.decode("#00AA00"));
-        mcColorMap.put("dark_aqua", Color.decode("#00AAAA"));
-        mcColorMap.put("dark_red", Color.decode("#AA0000"));
-        mcColorMap.put("dark_purple", Color.decode("#AA00AA"));
-        mcColorMap.put("gold", Color.decode("#FFAA00"));
-        mcColorMap.put("gray", Color.decode("#AAAAAA"));
-        mcColorMap.put("dark_gray", Color.decode("#555555"));
-        mcColorMap.put("blue", Color.decode("#5555FF"));
-        mcColorMap.put("green", Color.decode("#55FF55"));
-        mcColorMap.put("aqua", Color.decode("#55FFFF"));
-        mcColorMap.put("red", Color.decode("#FF5555"));
-        mcColorMap.put("light_purple", Color.decode("#FF55FF"));
-        mcColorMap.put("yellow", Color.decode("#FFFF55"));
-        mcColorMap.put("white", Color.decode("#FFFFFF"));
-    }
-
     static List<TextSegment> parseTextSegments(JsonElement element, TextFormat inherited) {
         List<TextSegment> segments = new ArrayList<>();
         if (element == null)
@@ -406,7 +279,7 @@ public class JavaMinecraft {
             if (text.contains("§")) {
                 segments.addAll(parseLegacy(text));
             } else {
-                segments.add(new TextSegment(text, inherited.color, inherited.bold, inherited.italic));
+                segments.add(new TextSegment(text, inherited.getColor(), inherited.isBold(), inherited.isItalic()));
             }
         } else if (element.isJsonObject()) {
             TextFormat current = new TextFormat(inherited);
@@ -415,18 +288,18 @@ public class JavaMinecraft {
                 String colorStr = obj.get("color").getAsString();
                 if (colorStr.startsWith("#")) {
                     try {
-                        current.color = Color.decode(colorStr);
+                        current.setColor(Color.decode(colorStr));
                     } catch (Exception e) {
-                        current.color = Color.WHITE;
+                        current.setColor(Color.WHITE);
                     }
                 } else {
-                    current.color = mcColorMap.getOrDefault(colorStr, Color.WHITE);
+                    current.setColor(mcColorMap.getOrDefault(colorStr, Color.WHITE));
                 }
             }
             if (obj.has("bold"))
-                current.bold = obj.get("bold").getAsBoolean();
+                current.setBold(obj.get("bold").getAsBoolean());
             if (obj.has("italic"))
-                current.italic = obj.get("italic").getAsBoolean();
+                current.setItalic(obj.get("italic").getAsBoolean());
             String text = "";
             if (obj.has("text"))
                 text = obj.get("text").getAsString();
@@ -434,7 +307,7 @@ public class JavaMinecraft {
                 if (text.contains("§"))
                     segments.addAll(parseLegacy(text));
                 else
-                    segments.add(new TextSegment(text, current.color, current.bold, current.italic));
+                    segments.add(new TextSegment(text, current.getColor(), current.isBold(), current.isItalic()));
             }
             if (obj.has("extra")) {
                 JsonArray extras = obj.getAsJsonArray("extra");
@@ -477,23 +350,56 @@ public class JavaMinecraft {
                     // Ignored.
                 } else {
                     switch (code) {
-                        case '0': currentColor = mcColorMap.get("black"); break;
-                        case '1': currentColor = mcColorMap.get("dark_blue"); break;
-                        case '2': currentColor = mcColorMap.get("dark_green"); break;
-                        case '3': currentColor = mcColorMap.get("dark_aqua"); break;
-                        case '4': currentColor = mcColorMap.get("dark_red"); break;
-                        case '5': currentColor = mcColorMap.get("dark_purple"); break;
-                        case '6': currentColor = mcColorMap.get("gold"); break;
-                        case '7': currentColor = mcColorMap.get("gray"); break;
-                        case '8': currentColor = mcColorMap.get("dark_gray"); break;
-                        case '9': currentColor = mcColorMap.get("blue"); break;
-                        case 'a': currentColor = mcColorMap.get("green"); break;
-                        case 'b': currentColor = mcColorMap.get("aqua"); break;
-                        case 'c': currentColor = mcColorMap.get("red"); break;
-                        case 'd': currentColor = mcColorMap.get("light_purple"); break;
-                        case 'e': currentColor = mcColorMap.get("yellow"); break;
-                        case 'f': currentColor = mcColorMap.get("white"); break;
-                        default: break;
+                        case '0':
+                            currentColor = mcColorMap.get("black");
+                            break;
+                        case '1':
+                            currentColor = mcColorMap.get("dark_blue");
+                            break;
+                        case '2':
+                            currentColor = mcColorMap.get("dark_green");
+                            break;
+                        case '3':
+                            currentColor = mcColorMap.get("dark_aqua");
+                            break;
+                        case '4':
+                            currentColor = mcColorMap.get("dark_red");
+                            break;
+                        case '5':
+                            currentColor = mcColorMap.get("dark_purple");
+                            break;
+                        case '6':
+                            currentColor = mcColorMap.get("gold");
+                            break;
+                        case '7':
+                            currentColor = mcColorMap.get("gray");
+                            break;
+                        case '8':
+                            currentColor = mcColorMap.get("dark_gray");
+                            break;
+                        case '9':
+                            currentColor = mcColorMap.get("blue");
+                            break;
+                        case 'a':
+                            currentColor = mcColorMap.get("green");
+                            break;
+                        case 'b':
+                            currentColor = mcColorMap.get("aqua");
+                            break;
+                        case 'c':
+                            currentColor = mcColorMap.get("red");
+                            break;
+                        case 'd':
+                            currentColor = mcColorMap.get("light_purple");
+                            break;
+                        case 'e':
+                            currentColor = mcColorMap.get("yellow");
+                            break;
+                        case 'f':
+                            currentColor = mcColorMap.get("white");
+                            break;
+                        default:
+                            break;
                     }
                     currentBold = false;
                     currentItalic = false;
@@ -579,14 +485,14 @@ public class JavaMinecraft {
         int y = motdStartY;
         for (TextSegment seg : segments) {
             int style = Font.PLAIN;
-            if (seg.bold)
+            if (seg.isBold())
                 style |= Font.BOLD;
-            if (seg.italic)
+            if (seg.isItalic())
                 style |= Font.ITALIC;
             Font segMinecraftFont = baseMinecraftFont.deriveFont(style, 25);
             Font segFallbackFont = fallbackFont.deriveFont(style, 25);
-            g.setColor(seg.color);
-            String[] lines = seg.text.split("\n", -1);
+            g.setColor(seg.getColor());
+            String[] lines = seg.getText().split("\n", -1);
             for (int i = 0; i < lines.length; i++) {
                 String line = lines[i];
                 x = drawStringWithFallback(g, line, x, y, segMinecraftFont, segFallbackFont);
@@ -666,12 +572,102 @@ public class JavaMinecraft {
 
     private static String getMinecraftFormatCode(TextSegment seg) {
         StringBuilder sb = new StringBuilder();
-        sb.append(getMinecraftColorCode(seg.color));
-        if (seg.bold)
+        sb.append(getMinecraftColorCode(seg.getColor()));
+        if (seg.isBold())
             sb.append("&l");
-        if (seg.italic)
+        if (seg.isItalic())
             sb.append("&o");
         return sb.toString();
     }
+
+    // Set the port.
+    public JavaMinecraft port(int port) {
+        this.port = port;
+        return this;
+    }
+
+    // Get the generated MOTD image.
+    public BufferedImage motd() throws IOException {
+        if (!retrieved) {
+            retrieveData();
+        }
+        return motdImage;
+    }
+
+    // Get online players as a string.
+    public String getOnlinePlayer() throws IOException {
+        if (!retrieved) {
+            retrieveData();
+        }
+        return onlinePlayer;
+    }
+
+    // Get max players as a string.
+    public String getMaxPlayer() throws IOException {
+        if (!retrieved) {
+            retrieveData();
+        }
+        return maxPlayer;
+    }
+
+    // Get the server icon image.
+    public BufferedImage getIcon() throws IOException {
+        if (!retrieved) {
+            retrieveData();
+        }
+        return serverIcon;
+    }
+
+    // --- Internal data retrieval method ---
+    private void retrieveData() throws IOException {
+        // Try a list of protocol versions.
+        int timeout = 5000;
+        int[] protocolVersions = {769, 755, 754, 751, 736, 735, 573, 498, 477, 401, 393, 340, 338, 315, 210, 110, 47};
+        String motdJson = null;
+        int usedVersion = -1;
+        for (int version : protocolVersions) {
+            try {
+                motdJson = ping(host, port, version, timeout);
+                if (motdJson != null && !motdJson.isEmpty()) {
+                    usedVersion = version;
+                    break;
+                }
+            } catch (IOException e) {
+                // Try next version.
+            }
+        }
+        if (motdJson == null || motdJson.isEmpty()) {
+            throw new IOException("Failed to retrieve MOTD from server");
+        }
+
+        // Parse JSON using Gson.
+        Gson gson = new Gson();
+        JsonObject jsonObj = gson.fromJson(motdJson, JsonObject.class);
+
+        // Extract online and max players.
+        if (jsonObj.has("players")) {
+            JsonObject playersObj = jsonObj.getAsJsonObject("players");
+            int online = playersObj.get("online").getAsInt();
+            int max = playersObj.get("max").getAsInt();
+            onlinePlayer = String.valueOf(online);
+            maxPlayer = String.valueOf(max);
+        }
+
+        // Extract server icon.
+        serverIcon = getServerIconFromJson(jsonObj);
+
+        // Parse MOTD description.
+        JsonElement description = jsonObj.get("description");
+        List<TextSegment> segments = parseTextSegments(description, new TextFormat());
+
+        // Use the online player count as text for the top-right (online/max)
+        String playerCountText = (onlinePlayer != null && maxPlayer != null) ? (onlinePlayer + "/" + maxPlayer) : "";
+
+        // Generate the MOTD image.
+        motdImage = renderMotd(segments, serverIcon, imageWidth, imageHeight, playerCountText);
+
+        retrieved = true;
+    }
+
 }
 
