@@ -578,9 +578,17 @@ public class McEmbedBuilder {
     private void retrieveData() throws IOException {
         if (retrieved) return;
 
-        String[] srvRecord = resolveSRV(host);
-        String actualHost = srvRecord != null ? srvRecord[0] : host;
-        int actualPort = srvRecord != null ? Integer.parseInt(srvRecord[1]) : port;
+        String actualHost;
+        int actualPort;
+
+        String[] srv = resolveSRV(host);
+        if (srv != null) {
+            actualHost = srv[0];
+            actualPort = Integer.parseInt(srv[1]);
+        } else {
+            actualHost = host;
+            actualPort = port;
+        }
 
         int[] protocolVersions = {
                 762, 761, 760, 759, 758, 757, 756, 755, 754, 753, 751, 736, 735, 578, 575, 573, 498,
