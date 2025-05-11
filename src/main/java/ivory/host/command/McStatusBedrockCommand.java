@@ -54,7 +54,6 @@ public class McStatusBedrockCommand extends DCommand {
             embedBuilder.setFooter("Ivory Host", "https://cdn.discordapp.com/avatars/1250796754983452792/17240db181de64e1b6fbf13e27b89d98.webp?size=160");
             embedBuilder.setColor(0x8F00FF);
 
-            // Build the embed object
             MessageEmbed embed = embedBuilder.build();
 
             if (!(onlinePlayers == -1)) {

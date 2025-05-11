@@ -1,6 +1,6 @@
 package ivory.host.command;
 
-import ivory.host.util.JavaMinecraft;
+import ivory.host.util.server.McEmbedBuilder;
 import ivory.host.util.classes.DCommand;
 import lombok.SneakyThrows;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -37,7 +37,7 @@ public class McStatusCommand extends DCommand {
         String ip = e.getOption("ip").getAsString();
         String port = e.getOption("port").getAsString();
 
-        JavaMinecraft server = new JavaMinecraft(ip, Integer.parseInt(port));
+        McEmbedBuilder server = new McEmbedBuilder(ip, Integer.parseInt(port));
 
         int onlinePlayers = Integer.parseInt(server.getOnlinePlayer());
         String maxPlayersStr = server.getMaxPlayer();

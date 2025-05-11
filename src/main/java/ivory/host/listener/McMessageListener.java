@@ -2,7 +2,7 @@ package ivory.host.listener;
 
 import ivory.host.data.GuildManager;
 import ivory.host.data.cache.CacheManager;
-import ivory.host.util.JavaMinecraft;
+import ivory.host.util.server.McEmbedBuilder;
 import ivory.host.util.classes.DEvent;
 import lombok.SneakyThrows;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -102,7 +102,7 @@ public class McMessageListener extends DEvent {
 
         String displayIp = isRemovePort ? ip : ip + ":" + port;
 
-        JavaMinecraft server = new JavaMinecraft(ip, port);
+        McEmbedBuilder server = new McEmbedBuilder(ip, port);
 
         int onlinePlayers;
         String maxPlayers;
